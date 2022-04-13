@@ -1,7 +1,0 @@
-id;name;p_min;p_max;cost;type;min_up_time;min_down_time
-1;Gen_Biomass_DELU;0;7754;1;Biomass;5;5
-2;Gen_Lignite_DELU;40;21205;23;Fossil Brown coal/Lignite;5;5
-3;Gen_Gas_DELU;40;31745;60;Fossil Gas;5;5
-4;Gen_HardCoal_DELU;40;25293;30;Fossil Hard coal;5;5
-5;Gen_Oil_DELU;40;4356;110;Fossil Oil;5;5
-6;Gen_Nuclear_DELU;40;9516;34;Nuclear;5;5

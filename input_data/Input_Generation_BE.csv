@@ -1,7 +1,0 @@
-id;name;p_min;p_max;cost;type;min_up_time;min_down_time
-1;Gen_Biomass_BE;0;708;1;Biomass;5;5
-2;Gen_Lignite_BE;40;534;23;Fossil Brown coal/Lignite;5;5
-3;Gen_Gas_BE;40;6649;60;Fossil Gas;5;5
-4;Gen_HardCoal_BE;40;470;30;Fossil Hard coal;5;5
-5;Gen_Oil_BE;40;333;110;Fossil Oil;5;5
-6;Gen_Nuclear_BE;40;5931;32;Nuclear;5;5
