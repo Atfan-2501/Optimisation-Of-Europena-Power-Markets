@@ -19,10 +19,10 @@ transfer_capacities = create_transfer_capacities("input_data/Input_Transfer_Capa
 
 % Example: This is an example model to show some Matlab optimization
 % basics, optimal objective value should be 57
-problem = create_model_example();
+%problem = create_model_example();
 
 % Task 1.1: Unit Commitment Problem with Renewables as Linear Program
-%problem = create_model_task_1_1(generation_units_DE_LU, loads_DE_LU, renewables_DE_LU); % comment/uncomment according to your needs
+problem = create_model_task_1_1(generation_units_DE_LU, loads_DE_LU, renewables_DE_LU); % comment/uncomment according to your needs
 
 % Task 1.2: Unit Commitment Problem with Market Coupling
 %generation_units = [generation_units_DE_LU, generation_units_BE];

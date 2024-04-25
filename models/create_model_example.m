@@ -25,7 +25,7 @@ function prob = create_model_example()
     obj_expr = optimexpr(1);
     for i = 1:numVar1
         for j = 1:numVar2
-            obj_expr = obj_expr + (i+j) * X(i,j);
+            obj_expr = obj_expr + (i+j) * X;
         end
     end
     prob.Objective = obj_expr;
