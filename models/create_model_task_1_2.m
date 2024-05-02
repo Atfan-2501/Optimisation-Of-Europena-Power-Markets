@@ -66,7 +66,7 @@ function prob = create_model_task_1_2(generation_units, load_series, input_trans
     prob.Constraints.load_coverage = optimconstr([maxTime, maxMR]);
 
     for mr=1:maxMR
-	    for t = 1:maxTime
+	    for t=1:maxTime
             prob.Constraints.load_coverage(t, mr) = P_t_total(1,t,mr) + P_Import(t, mr) - P_Export(t, mr)== load_series(t, mr).p; 
         end
     end
@@ -78,7 +78,7 @@ function prob = create_model_task_1_2(generation_units, load_series, input_trans
 
     for mr = 1:maxMR
         for t = 1:maxTime
-          prob.Constraints.importBalancing(t, mr) = P_t_total(1,t,mr) == load_series(t, mr).p + P_Export(t, mr) - P_Export(t, mr);
+            prob.Constraints.importBalancing(t, mr) = P_t_total(1,t,mr) == load_series(t, mr).p + P_Export(t, mr) - P_Import(t, mr);
         end
     end
     
