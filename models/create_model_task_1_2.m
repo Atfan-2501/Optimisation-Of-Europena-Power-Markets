@@ -13,17 +13,17 @@ function prob = create_model_task_1_2(generation_units, load_series, input_trans
     prob = optimproblem('Description','Task 1.2','ObjectiveSense','minimize');
 
     % Create decision variables
-    P = optimvar('p_gen',maxMR, maxGen, maxTime, 'Type','continuous', 'LowerBound',0.);% ToDo
+    P = optimvar('p_gen',maxGen, maxTime, maxMR, 'Type','continuous', 'LowerBound',0.);% ToDo
     
-    P_Import = optimvar('p_import', maxMR, maxTime, 'Type','continuous', 'LowerBound',0.);% ToDo
-    P_Export = optimvar('p_export', maxMR, maxTime, 'Type','continuous', 'LowerBound',0.);% ToDo
+    P_Import = optimvar('p_import', maxTime, maxMR, 'Type','continuous', 'LowerBound',0.);% ToDo
+    P_Export = optimvar('p_export', maxTime, maxMR, 'Type','continuous', 'LowerBound',0.);% ToDo
     
     % generation bounds
 	% ToDo
     for mr=1:maxMR
         for g=1:maxGen
             for t=1:maxTime
-                P.UpperBound(mr,g,t) = generation_units(g,mr).p_max;
+                P.UpperBound(g, t, mr) = generation_units(g, mr).p_max;
             end 
         end
     end
@@ -32,8 +32,8 @@ function prob = create_model_task_1_2(generation_units, load_series, input_trans
 	% ToDo
     for mr=1:maxMR
        for t=1:maxTime
-            P_Import.UpperBound(mr,t) = input_transfer_capacities(t,mr).p_import_max;
-            P_Export.UpperBound(mr,t) = input_transfer_capacities(t,mr).p_export_max;
+            P_Import.UpperBound(t, mr) = input_transfer_capacities(t,mr).p_import_max;
+            P_Export.UpperBound(t, mr) = input_transfer_capacities(t,mr).p_export_max;
        end
     end
      
@@ -43,44 +43,43 @@ function prob = create_model_task_1_2(generation_units, load_series, input_trans
     for mr = 1:maxMR
        for t = 1:maxTime
             for g = 1:maxGen
-                obj_expr = obj_expr + P(mr,g,t)*generation_units(g,mr).cost; % ToDo
+                obj_expr = obj_expr + (P(g,t,mr)*generation_units(g,mr).cost); % ToDo
             end
-                obj_expr = obj_expr + P_Export(mr, t)*input_transfer_cost(1, mr).c_export + P_Import(mr,t)*input_transfer_cost(1, mr).c_import; %  ToDo
+            obj_expr = obj_expr + (P_Export(t, mr)*input_transfer_cost(1, mr).c_export) + (P_Import(t, mr)*input_transfer_cost(1, mr).c_import); %  ToDo
        end
     end
 
-    prob.Objective = obj_expr; 
+    prob.Objective = obj_expr;
     
     % Create constraints
     
     % load series manipulation
     for mr=1:maxMR
         for t = 1:maxTime
-        load_series(t,mr).p = load_series(t,mr).p - renewables_series(t,mr).p_total;
+            load_series(t,mr).p = load_series(t,mr).p - renewables_series(t,mr).p_total;
         end
     end 
 
     % load coverage
 	% ToDo
-    P_t_total = sum(P,2); % create vector containing the sum of P_g in each row for different time points
-    prob.Constraints.load_coverage = optimconstr([maxMR, maxTime]);
+    P_t_total = sum(P,1); % create vector containing the sum of P_g in each row for different time points
+    prob.Constraints.load_coverage = optimconstr([maxTime, maxMR]);
 
     for mr=1:maxMR
 	    for t = 1:maxTime
-            prob.Constraints.load_coverage(mr, t) = P_t_total(mr,1,t) + P_Import_total(mr, 1, t) - P_Export_total(mr, 1, t)== load_series(t, mr).p; 
+            prob.Constraints.load_coverage(t, mr) = P_t_total(1,t,mr) + P_Import(t, mr) - P_Export(t, mr)== load_series(t, mr).p; 
         end
     end
-    
+     
     % import/export balancing
 	% ToDo
 
-    prob.Constraints.importBalancing = optimconstr([maxMR, maxTime]);
+    prob.Constraints.importBalancing = optimconstr([maxTime, maxMR]);
 
     for mr = 1:maxMR
         for t = 1:maxTime
-          prob.Constraints.importBalancing(t) = P_t_total(mr,1,t) == load_series(t, mr).p + P_Export_total(mr, 1, t);
+          prob.Constraints.importBalancing(t, mr) = P_t_total(1,t,mr) == load_series(t, mr).p + P_Export(t, mr) - P_Export(t, mr);
         end
     end
-
     
 end
