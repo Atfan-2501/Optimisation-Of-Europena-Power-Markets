@@ -24,13 +24,13 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
     % generation bounds as constraints due to coupling (see below)
     % copied from task 1.2
     
-    for mr=1:maxMR
-        for g=1:maxGen
-            for t=1:maxTime
-                P.UpperBound(g, t, mr) = generation_units(g, mr).p_max;
-            end 
-        end
-    end
+    %for mr=1:maxMR
+    %    for g=1:maxGen
+    %        for t=1:maxTime
+    %            P.UpperBound(g, t, mr) = generation_units(g, mr).p_max;
+    %        end 
+    %    end
+    %end
 
     % transfer bounds
     % copied from task 1.2
@@ -69,21 +69,44 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
 
 
     % load coverage
-    % ToDo
+    P_t_total = sum(P,1); % create vector containing the sum of P_g in each row for different time points
+    prob.Constraints.load_coverage = optimconstr([maxTime, maxMR]);
+
+    for mr=1:maxMR
+	    for t=1:maxTime
+            prob.Constraints.load_coverage(t, mr) = P_t_total(1,t,mr) + P_Import(t, mr) - P_Export(t, mr) == load_series(t, mr).p; 
+        end
+    end
     
     % import/export balancing
     % copied from task 1.2, update for better version presented in lecture
+    prob.Constraints.importBalancing = optimconstr([maxTime, maxMR]);
 
     for t = 1:maxTime
         prob.Constraints.importBalancing(t, 1) = sum(P_Export(t, :)) == sum(P_Import(t, :));
-        prob.Constraints.importBalancing(t, 2) = P_Export(t, 2) == P_Import(t, 1);
     end
 
     
     % generation bounds and coupling
     prob.Constraints.P_lowerbound = optimconstr(maxGen,maxTime,maxMR);
     prob.Constraints.P_upperbound = optimconstr(maxGen,maxTime,maxMR);
-    % ToDo
+    
+    for mr = 1:maxMR
+       for t = 1:maxTime
+            for g = 1:maxGen
+                prob.Constraints.P_lowerbound(g,t,mr) = P(g,t,mr) >= P_binary(g,t,mr)*generation_units(g,mr).p_min;
+            end
+       end
+    end
+
+    for mr = 1:maxMR
+       for t = 1:maxTime
+            for g = 1:maxGen
+                prob.Constraints.P_upperbound(g,t,mr) = P(g,t,mr) <= P_binary(g,t,mr)*generation_units(g,mr).p_max;
+            end
+       end
+    end
+
          
     % operational constraints
     prob.Constraints.min_up_time_1 = optimconstr(maxGen,maxTime,maxMR); % minimum up time 1: subsequent periods up during all possible sets of consecutive periods
@@ -95,7 +118,10 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
     for g = 1:maxGen
         for mr = 1:maxMR
             % Minimum Up Times
-            % ToDo
+            for t= generation_units(g,mr).min_up_time+1:maxTime
+                prob.Constraints.min_up_time_1 = sum(P_binary(g,t-generation_units(g,mr).min_up_time:t,mr),2) >= P_binary(g,t,mr)*generation_units(g,mr).min_up_time;
+            end
+          
             
             % Minimum Down Times
             % ToDo

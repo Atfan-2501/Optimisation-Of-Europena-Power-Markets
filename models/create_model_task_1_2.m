@@ -78,9 +78,7 @@ function prob = create_model_task_1_2(generation_units, load_series, input_trans
 
     %for mr = 1:maxMR
     for t = 1:maxTime
-        % prob.Constraints.importBalancing(t, mr) = P_t_total(1,t,mr) == load_series(t, mr).p + P_Export(t, mr) - P_Import(t, mr);
-        prob.Constraints.importBalancing(t, 1) = P_Export(t, 1) == P_Import(t, 2);
-        prob.Constraints.importBalancing(t, 2) = P_Export(t, 2) == P_Import(t, 1);
+        prob.Constraints.importBalancing(t, 1) = sum(P_Export(t, :)) == sum(P_Import(t, :));
     end
     %end
     
