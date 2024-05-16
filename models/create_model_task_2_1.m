@@ -14,31 +14,71 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
     prob = optimproblem('Description','Task 2.1','ObjectiveSense','minimize');
 
     % Create decision variables
-    P = optimvar('p_gen',% ToDo
-    P_binary = optimvar('p_gen_binary',% ToDo
+    P = optimvar('p_gen', maxGen, maxTime, maxMR, 'Type','continuous', 'LowerBound',0.);
+    P_binary = optimvar('p_gen_binary', maxGen, maxTime, maxMR, 'Type', 'integer','LowerBound',0,'UpperBound',1);
     
-    P_Import = optimvar('p_import',% ToDo
-    P_Export = optimvar('p_export',% ToDo
+    P_Import = optimvar('p_import', maxTime, maxMR, 'Type','continuous', 'LowerBound',0.);
+    P_Export = optimvar('p_export', maxTime, maxMR, 'Type','continuous', 'LowerBound',0.);
+
 
     % generation bounds as constraints due to coupling (see below)
+    % copied from task 1.2
     
+    for mr=1:maxMR
+        for g=1:maxGen
+            for t=1:maxTime
+                P.UpperBound(g, t, mr) = generation_units(g, mr).p_max;
+            end 
+        end
+    end
+
     % transfer bounds
-    % ToDo
+    % copied from task 1.2
+
+    for mr=1:maxMR
+       for t=1:maxTime
+            P_Import.UpperBound(t, mr) = input_transfer_capacities(t,mr).p_import_max;
+            P_Export.UpperBound(t, mr) = input_transfer_capacities(t,mr).p_export_max;
+       end
+    end
 
     % Create objective
+    % I added P_binary, but am unsure, if it is needed. Otherwise it is the same as from Task 1.2
     obj_expr = optimexpr(1);
 
-    % ToDo
+    for mr = 1:maxMR
+       for t = 1:maxTime
+            for g = 1:maxGen
+                obj_expr = obj_expr + (P_binary(g,t,mr)*P(g,t,mr)*generation_units(g,mr).cost); % ToDo
+            end
+            obj_expr = obj_expr + (P_Export(t, mr)*input_transfer_cost(1, mr).c_export) + (P_Import(t, mr)*input_transfer_cost(1, mr).c_import); %  ToDo
+       end
+    end
+
 
     prob.Objective = obj_expr; 
 
     % Create constraints
+    % load series manipulation should be required according to task, but is not asked here explicitly. I am putting it here anyway, if there is anything wrong with the result we can remove it.
     
+    for mr=1:maxMR
+        for t = 1:maxTime
+            load_series(t,mr).p = load_series(t,mr).p - renewables_series(t,mr).p_total;
+        end
+    end 
+
+
     % load coverage
     % ToDo
     
     % import/export balancing
-    % ToDo
+    % copied from task 1.2, update for better version presented in lecture
+
+    for t = 1:maxTime
+        prob.Constraints.importBalancing(t, 1) = sum(P_Export(t, :)) == sum(P_Import(t, :));
+        prob.Constraints.importBalancing(t, 2) = P_Export(t, 2) == P_Import(t, 1);
+    end
+
     
     % generation bounds and coupling
     prob.Constraints.P_lowerbound = optimconstr(maxGen,maxTime,maxMR);
