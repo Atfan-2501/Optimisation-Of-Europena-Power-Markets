@@ -69,6 +69,7 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
 
 
     % load coverage
+    % TODO: _t_total needs to be updated to include P_binary.
     P_t_total = sum(P,1); % create vector containing the sum of P_g in each row for different time points
     prob.Constraints.load_coverage = optimconstr([maxTime, maxMR]);
 
@@ -122,9 +123,20 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
                 prob.Constraints.min_up_time_1 = sum(P_binary(g,t-generation_units(g,mr).min_up_time:t,mr),2) >= P_binary(g,t,mr)*generation_units(g,mr).min_up_time;
             end
           
+            for t= maxTime-generation_units(g,mr).min_up_time:maxTime %only looking at th periods that would not be 
+                prob.Constraints.min_up_time_2 = (P_binary(g,t,mr)-P_binary(g,t-1,mr))*sum(P_binary(g,t:maxTime,mr) == P_binary(g,t,mr)*);
+            end
+           
             
-            % Minimum Down Times
-            % ToDo
+            % Minimum Down Time
+            for t= generation_units(g,mr).min_down_time+1:maxTime
+                prob.Constraints.min_down_time_1 = sum(P_binary(g,t-generation_units(g,mr).min_down_time:t,mr),2) >= P_binary(g,t,mr)*generation_units(g,mr).min_down_time;
+            end
+
+            for t= maxTime-generation_units(g,mr).min_down_time:maxTime
+                prob.Constraints.min_down_time_2 = 
+            end
+
         end
     end
     
