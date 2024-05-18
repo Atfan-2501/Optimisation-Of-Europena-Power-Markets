@@ -22,15 +22,6 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
 
 
     % generation bounds as constraints due to coupling (see below)
-    % copied from task 1.2
-    
-    %for mr=1:maxMR
-    %    for g=1:maxGen
-    %        for t=1:maxTime
-    %            P.UpperBound(g, t, mr) = generation_units(g, mr).p_max;
-    %        end 
-    %    end
-    %end
 
     % transfer bounds
     % copied from task 1.2
@@ -43,15 +34,14 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
     end
 
     % Create objective
-    % I added P_binary, but am unsure, if it is needed. Otherwise it is the same as from Task 1.2
     obj_expr = optimexpr(1);
 
     for mr = 1:maxMR
        for t = 1:maxTime
             for g = 1:maxGen
-                obj_expr = obj_expr + (P_binary(g,t,mr)*P(g,t,mr)*generation_units(g,mr).cost); % ToDo
+                obj_expr = obj_expr + P(g,t,mr) * generation_units(g,mr).cost; % ToDo
             end
-            obj_expr = obj_expr + (P_Export(t, mr)*input_transfer_cost(1, mr).c_export) + (P_Import(t, mr)*input_transfer_cost(1, mr).c_import); %  ToDo
+            obj_expr = obj_expr + P_Export(t, mr) * input_transfer_cost(1, mr).c_export + P_Import(t, mr) * input_transfer_cost(1, mr).c_import; %  ToDo
        end
     end
 
@@ -71,6 +61,7 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
     % load coverage
     % TODO: _t_total needs to be updated to include P_binary.
     P_t_total = sum(P,1); % create vector containing the sum of P_g in each row for different time points
+
     prob.Constraints.load_coverage = optimconstr([maxTime, maxMR]);
 
     for mr=1:maxMR
@@ -95,19 +86,11 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
     for mr = 1:maxMR
        for t = 1:maxTime
             for g = 1:maxGen
-                prob.Constraints.P_lowerbound(g,t,mr) = P(g,t,mr) >= P_binary(g,t,mr)*generation_units(g,mr).p_min;
+                prob.Constraints.P_lowerbound(g,t,mr) = P(g,t,mr) >= P_binary(g,t,mr) * generation_units(g,mr).p_min;
+                prob.Constraints.P_upperbound(g,t,mr) = P(g,t,mr) <= P_binary(g,t,mr) * generation_units(g,mr).p_max;
             end
        end
     end
-
-    for mr = 1:maxMR
-       for t = 1:maxTime
-            for g = 1:maxGen
-                prob.Constraints.P_upperbound(g,t,mr) = P(g,t,mr) <= P_binary(g,t,mr)*generation_units(g,mr).p_max;
-            end
-       end
-    end
-
          
     % operational constraints
     prob.Constraints.min_up_time_1 = optimconstr(maxGen,maxTime,maxMR); % minimum up time 1: subsequent periods up during all possible sets of consecutive periods
@@ -119,25 +102,28 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
     for g = 1:maxGen
         for mr = 1:maxMR
             % Minimum Up Times
-            for t= generation_units(g,mr).min_up_time+1:maxTime
-                prob.Constraints.min_up_time_1 = sum(P_binary(g,t-generation_units(g,mr).min_up_time:t,mr),2) >= P_binary(g,t,mr)*generation_units(g,mr).min_up_time;
+            for t = 1:(maxTime - generation_units(g,mr).min_up_time + 1)
+                prob.Constraints.min_up_time_1(g, t, mr) = sum(P_binary(g, t:t+generation_units(g,mr).min_up_time-1, mr)) >= generation_units(g,mr).min_up_time * P_binary(g, t, mr);
             end
-          
-            for t= maxTime-generation_units(g,mr).min_up_time:maxTime %only looking at th periods that would not be 
-                prob.Constraints.min_up_time_2 = (P_binary(g,t,mr)-P_binary(g,t-1,mr))*sum(P_binary(g,t:maxTime,mr) == P_binary(g,t,mr)*);
-            end
-           
             
-            % Minimum Down Time
-            for t= generation_units(g,mr).min_down_time+1:maxTime
-                prob.Constraints.min_down_time_1 = sum(P_binary(g,t-generation_units(g,mr).min_down_time:t,mr),2) >= P_binary(g,t,mr)*generation_units(g,mr).min_down_time;
+            % Final Constraint: Ensure unit stays on until the end if turned on
+            for t = (maxTime - generation_units(g,mr).min_up_time + 2):maxTime
+                prob.Constraints.min_up_time_2(g, t, mr) = sum(P_binary(g, t:maxTime, mr)) >= (maxTime - t + 1) * P_binary(g, t, mr);
             end
-
-            for t= maxTime-generation_units(g,mr).min_down_time:maxTime
-                prob.Constraints.min_down_time_2 = 
-            end
-
         end
     end
-    
+
+for g = 1:maxGen
+    for mr = 1:maxMR
+        % Minimum Down Times
+        for t = 1:(maxTime - generation_units(g,mr).min_down_time + 1)
+            prob.Constraints.min_down_time_1(g, t, mr) = sum(1 - P_binary(g, t:t+generation_units(g,mr).min_down_time-1, mr)) >= generation_units(g,mr).min_down_time * (1 - P_binary(g, t, mr));
+        end
+        
+        % Final Constraint: Ensure unit stays off until the end if turned off
+        for t = (maxTime - generation_units(g,mr).min_down_time + 2):maxTime
+            prob.Constraints.min_down_time_2(g, t, mr) = sum(1 - P_binary(g, t:maxTime, mr)) >= (maxTime - t + 1) * (1 - P_binary(g, t, mr));
+        end
+    end
+end
 end
