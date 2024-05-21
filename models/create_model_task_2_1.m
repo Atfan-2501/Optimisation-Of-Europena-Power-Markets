@@ -103,12 +103,16 @@ function prob = create_model_task_2_1(generation_units, load_series, input_trans
         for mr = 1:maxMR
             % Minimum Up Times
             for t = 1:(maxTime - generation_units(g,mr).min_up_time + 1)
-                prob.Constraints.min_up_time_1(g, t, mr) = sum(P_binary(g, t:t+generation_units(g,mr).min_up_time-1, mr)) >= generation_units(g,mr).min_up_time * P_binary(g, t, mr);
+                if t==1
+                    prob.Constraints.min_up_time_1(g, t, mr) = sum(P_binary(g, t:t+generation_units(g,mr).min_up_time-1, mr)) >= generation_units(g,mr).min_up_time * P_binary(g, t, mr);
+                else
+                    prob.Constraints.min_up_time_1(g, t, mr) = sum(P_binary(g, t:t+generation_units(g,mr).min_up_time-1, mr)) >= generation_units(g,mr).min_up_time * (P_binary(g,t,mr)-P_binary(g,t-1,mr));
+                end
             end
             
             % Final Constraint: Ensure unit stays on until the end if turned on
             for t = (maxTime - generation_units(g,mr).min_up_time + 2):maxTime
-                prob.Constraints.min_up_time_2(g, t, mr) = sum(P_binary(g, t:maxTime, mr)) >= (maxTime - t + 1) * P_binary(g, t, mr);
+                prob.Constraints.min_up_time_2(g, t, mr) = sum(P_binary(g, t:maxTime, mr)) >= (maxTime - t + 1) * (P_binary(g,t,mr)-P_binary(g,t-1,mr));
             end
         end
     end
@@ -117,12 +121,15 @@ for g = 1:maxGen
     for mr = 1:maxMR
         % Minimum Down Times
         for t = 1:(maxTime - generation_units(g,mr).min_down_time + 1)
-            prob.Constraints.min_down_time_1(g, t, mr) = sum(1 - P_binary(g, t:t+generation_units(g,mr).min_down_time-1, mr)) >= generation_units(g,mr).min_down_time * (1 - P_binary(g, t, mr));
+            if t==1
+                prob.Constraints.min_down_time_1(g, t, mr) = sum(1 - P_binary(g, t:t+generation_units(g,mr).min_down_time-1, mr)) >= generation_units(g,mr).min_down_time * (1 - P_binary(g, t, mr));
+            else
+                prob.Constraints.min_down_time_1(g, t, mr) = sum(1 - P_binary(g, t:t+generation_units(g,mr).min_down_time-1, mr)) >= generation_units(g,mr).min_down_time * (P_binary(g,t-1,mr) - P_binary(g, t, mr));
+            end
         end
-        
         % Final Constraint: Ensure unit stays off until the end if turned off
         for t = (maxTime - generation_units(g,mr).min_down_time + 2):maxTime
-            prob.Constraints.min_down_time_2(g, t, mr) = sum(1 - P_binary(g, t:maxTime, mr)) >= (maxTime - t + 1) * (1 - P_binary(g, t, mr));
+            prob.Constraints.min_down_time_2(g, t, mr) = sum(1 - P_binary(g, t:maxTime, mr)) >= (maxTime - t + 1) * (P_binary(g,t-1,mr) - P_binary(g, t, mr));
         end
     end
 end
