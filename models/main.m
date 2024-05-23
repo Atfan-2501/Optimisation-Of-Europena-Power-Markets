@@ -31,16 +31,16 @@ transfer_capacities = create_transfer_capacities("input_data/Input_Transfer_Capa
 % problem = create_model_task_1_2(generation_units, loads, transfer_cost, transfer_capacities, renewables); % comment/uncomment according to your needs
 
 % Task 2.1: Unit Commitment Problem with Constraints as Mixed Integer Linear Program
-% generation_units = [generation_units_DE_LU, generation_units_BE];
-% loads = [loads_DE_LU, loads_BE];
-% renewables = [renewables_DE_LU, renewables_BE];
-% problem = create_model_task_2_1(generation_units, loads, transfer_cost, transfer_capacities, renewables); % comment/uncomment according to your needs
-
-% Task 2.2: Unit Commitment Problem with positive Control Reserve
 generation_units = [generation_units_DE_LU, generation_units_BE];
 loads = [loads_DE_LU, loads_BE];
 renewables = [renewables_DE_LU, renewables_BE];
-problem = create_model_task_2_2(generation_units, loads, transfer_cost, transfer_capacities, renewables); % comment/uncomment according to your needs
+problem = create_model_task_2_1(generation_units, loads, transfer_cost, transfer_capacities, renewables); % comment/uncomment according to your needs
+
+% Task 2.2: Unit Commitment Problem with positive Control Reserve
+%generation_units = [generation_units_DE_LU, generation_units_BE];
+%loads = [loads_DE_LU, loads_BE];
+%renewables = [renewables_DE_LU, renewables_BE];
+%problem = create_model_task_2_2(generation_units, loads, transfer_cost, transfer_capacities, renewables); % comment/uncomment according to your needs
 
 % Write MPS and solve problem
 problem2mps(problem);
