@@ -134,6 +134,18 @@ function prob = create_model_task_2_2(generation_units, load_series, input_trans
     
     % control reserve
     prob.Constraints.controlreserve = optimconstr(maxTime); % control reserve
-
+    for t = 1:maxTime
+        total_available_capacity = 0;
+        total_committed_power = 0;
+        
+        for g = 1:maxGen
+            for mr = 1:maxMR
+                total_available_capacity = total_available_capacity + generation_units(g, mr).p_max;
+                total_committed_power = total_committed_power + P(g, t, mr);
+            end
+        end
+        
+        prob.Constraints.controlreserve(t) = total_available_capacity - total_committed_power >= P_ControlReserve_total;
+    end
     
 end

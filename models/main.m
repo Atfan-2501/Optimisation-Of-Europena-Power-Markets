@@ -4,8 +4,8 @@
 % "input_data" have to be added to the matlab path, see: 
 % https://de.mathworks.com/help/matlab/matlab_env/add-remove-or-reorder-folders-on-the-search-path.html
 
-addpath("/usr/local_rwth/sw/gurobi/gurobi900/linux64/matlab")
-addpath("/usr/local_rwth/sw/gurobi/gurobi900/linux64/examples/matlab")
+addpath("C:/gurobi1102/win64/matlab")
+addpath("C:/gurobi1102/win64/examples/matlab")
 
 % Read input data
 loads_BE = create_load("input_data/Input_Load_BE.csv", "BE");
@@ -22,7 +22,7 @@ transfer_capacities = create_transfer_capacities("input_data/Input_Transfer_Capa
 %problem = create_model_example();
 
 % Task 1.1: Unit Commitment Problem with Renewables as Linear Program
-%problem = create_model_task_1_1(generation_units_DE_LU, loads_DE_LU, renewables_DE_LU); % comment/uncomment according to your needs
+% problem = create_model_task_1_1(generation_units_DE_LU, loads_DE_LU, renewables_DE_LU); % comment/uncomment according to your needs
 
 % Task 1.2: Unit Commitment Problem with Market Coupling
 % generation_units = [generation_units_DE_LU, generation_units_BE];
